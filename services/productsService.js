@@ -5,49 +5,37 @@ class ProductsService {
   constructor() {}
 
   async create(data) {
-    return data
+    const newProduct = await models.Product.create(data);
+    return newProduct;
   }
 
   async find() {
-    const rta = await models.Product.findAll();
-    return rta;
+    const products = await models.Product.findAll({
+      include: ['category']
+    });
+    return products;
   }
 
   async findOne(id) {
-    const index = this.getIndex(id)
-    if( index === -1 ) {
+    const product = await models.Product.findByPk(id)
+    if( !product ) {
       throw boom.notFound('Product not found');
     } 
-    return this.products[index]
+    return product;
   }
 
   async update(id, changes) {
-    const index = this.getIndex(id);
-    if( index === -1 ) {
-      throw boom.notFound('Product not found');
-    }
-
-    const product = this.products[index];
-    this.products[index] = {
-      ...product,
-      ...changes
-    }
-    return this.products[index]
+    const product = await this.findOne(id);
+    const rta = await product.update(changes);
+    return rta;
   }
 
   async delete(id) {
-    const index = this.getIndex(id);
-    if(index === -1) {
-      throw boom.notFound('Product not found');
-    } else {
-      this.products.splice(index, 1)
-      return { id };
-    }
+    const product = await this.findOne(id);
+    product.destroy();
+    return { id };
   }
 
-  getIndex(id) {
-    return this.products.findIndex(product => product.id === id);
-  }
 }
 
 module.exports = ProductsService;
